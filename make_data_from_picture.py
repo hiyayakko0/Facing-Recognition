@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 """
+参考：
 [openCVで複数画像ファイルから顔検出をして切り出し保存]
 (https://qiita.com/FukuharaYohei/items/457737530264572f5a5b)
+指定フォルダ以下すべての写真フォルダの画像を取得
+保存する顔画像サイズの拡大
+ファイルの移動をデフォルトでOFF
+
 """
 import cv2, os, argparse, shutil
 
 # parameter ###################################
 # 切り抜いた画像の保存先ディレクトリ
-path = r"C:\Users\Public\Pictures"
-
-SAVE_PATH = r"C:\CMD\OpenCV\Face Recognition\Output\\"
+pic_path = r"C:\CMD\OpenCV\TEST"
+save_path = r"C:\CMD\OpenCV\TEST"
 #cascade_path = r"C:\CMD\Anaconda\Library\etc\haarcascades"
 cascade_path = r"C:\Anaconda3\Library\etc\haarcascades"
-
+SAVE_PATH+"\\output"
 # functions ########################################
-os.chdir(path)
+os.chdir(pic_path)
 # 学習済モデルの種類
 CASCADE = ["default","alt","alt2","tree","profile","nose"]
 
-# 直接実行されている場合に通る(importされて実行時は通らない)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() #パーサをコンストラクト
     parser.add_argument(
@@ -34,30 +37,36 @@ if __name__ == "__main__":
         default=1.3,
         help="scaleFactor value of detectMultiScale."
   )
+    #　顔通しの最小距離
     parser.add_argument(
         "--neighbors",
         type=int,
         default=2,
         help="minNeighbors value of detectMultiScale."
   )
+    # 顔として認識する最小サイズ
     parser.add_argument(
         "--min",
         type=int,
-        default=80,
+        default=50,
         help="minSize value of detectMultiScale."
   )
+    # インプットディレクトリ
     parser.add_argument(
         "--input_dir",
         type=str,
         default="./",
         help="The path of input directory."
   )
+    # 検出済みファイルの移動ディレクトリ
+    # 指定しない場合は移動しない
     parser.add_argument(
         "--move_dir",
         type=str,
         default="./",
         help="The path of moving detected files."
-  )
+  ) 
+    # 検出された顔サイズに対して保存するどれだけ大きくするか
     parser.add_argument(
         "--face_size",
         type=float,
@@ -102,8 +111,8 @@ for fls in rt:
     for fl in fls[2]:
         files.append(os.path.join(fls[0],fl))
 
-if not os.path.exists(SAVE_PATH):
-    os.mkdir(SAVE_PATH)
+if not os.path.exists(save_path+"\\output"):
+    os.mkdir(save_path+"\\output")
 
 if not os.path.exists(FLAGS.move_dir):
     os.mkdir(FLAGS.move_dir)
@@ -142,22 +151,18 @@ for file_name in files:
                 x = max(x-int(w*rt),0)
                 y = max(y-int(h*rt),0)
                 
-                cv2.imwrite(SAVE_PATH+str(face_detect_count)+os.path.basename(file_name), 
+                cv2.imwrite(save_path+"\\output\\"+str(face_detect_count)+os.path.basename(file_name), 
                             img[y:y+int(size*(rt+1)),#上から下へ 
                                 x:x+int(size*(rt+1))]#右から左へ
                             )
                 face_detect_count = face_detect_count + 1
 
             # 検出できたファイルは移動
-#            if FLAGS.move_dir != ("" or "./"):
-#                shutil.move(FLAGS.input_dir + file_name, 
-#                            FLAGS.move_dir)
+            if FLAGS.move_dir != ("" or "./"):
+                shutil.move(FLAGS.input_dir + file_name, 
+                            FLAGS.move_dir)
         else:
             print(file_name + ':No Face')
             face_undetected_count = face_undetected_count + 1
             
 print('Undetected Image Files:%d' % face_undetected_count)
-
-
-
-
